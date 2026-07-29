@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Numbered — a verse-number concordance</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -30,12 +30,12 @@
   .wrap{
     max-width: 720px;
     margin: 0 auto;
-    padding: 64px 24px 120px;
+    padding: clamp(32px, 8vw, 64px) clamp(16px, 5vw, 24px) 100px;
   }
 
   .eyebrow{
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.28em;
     text-transform: uppercase;
     color: var(--ember);
@@ -44,8 +44,8 @@
 
   h1{
     font-weight: 500;
-    font-size: 44px;
-    line-height: 1.05;
+    font-size: clamp(28px, 8vw, 44px);
+    line-height: 1.08;
     margin: 0 0 12px;
     letter-spacing: -0.01em;
   }
@@ -56,31 +56,34 @@
 
   .sub{
     color: var(--ink-dim);
-    font-size: 19px;
+    font-size: clamp(15px, 4vw, 19px);
     line-height: 1.5;
-    margin: 0 0 40px;
+    margin: 0 0 32px;
     max-width: 52ch;
   }
 
   /* the input — a single ledger line */
   .entry{
     display:flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    gap: 18px;
+    gap: 12px 18px;
     border-bottom: 1px solid var(--rule);
     padding-bottom: 14px;
     margin-bottom: 8px;
   }
   .entry input{
-    flex:1;
+    flex: 1 1 140px;
+    min-width: 0;
     background: transparent;
     border: none;
     outline: none;
     color: var(--ink);
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 34px;
+    font-size: clamp(24px, 7vw, 34px);
     letter-spacing: 0.05em;
     padding: 6px 0;
+    width: 100%;
   }
   .entry input::placeholder{ color: #3a3f47; }
   .entry .go{
@@ -91,20 +94,24 @@
     color: var(--ink-dim);
     background: none;
     border: 1px solid var(--rule);
-    padding: 10px 16px;
+    padding: 12px 16px;
     cursor: pointer;
     transition: border-color .15s, color .15s;
     white-space: nowrap;
+    flex: 0 0 auto;
+    -webkit-tap-highlight-color: transparent;
   }
-  .entry .go:hover{ border-color: var(--ember); color: var(--ember); }
+  .entry .go:hover, .entry .go:active{ border-color: var(--ember); color: var(--ember); }
 
   .splits{
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--ink-dim);
-    margin: 14px 0 46px;
+    margin: 14px 0 40px;
     min-height: 18px;
     letter-spacing: 0.02em;
+    line-height: 1.7;
+    word-break: break-word;
   }
   .splits span{ color: var(--ember-dim); }
 
@@ -112,21 +119,23 @@
   .source-bar{
     display:flex;
     align-items:center;
-    gap: 12px;
+    gap: 10px;
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--ink-dim);
-    margin-bottom: 40px;
+    margin-bottom: 36px;
     flex-wrap: wrap;
+    line-height: 1.6;
   }
   .dot{ width:7px; height:7px; border-radius:50%; background:#5a5f66; flex-shrink:0; }
   .dot.ok{ background:#7fae6a; }
   .dot.bad{ background:#b3563f; }
   .source-bar label{
     border: 1px solid var(--rule);
-    padding: 5px 10px;
+    padding: 6px 10px;
     cursor: pointer;
     transition: border-color .15s, color .15s;
+    -webkit-tap-highlight-color: transparent;
   }
   .source-bar label:hover{ border-color: var(--ember); color: var(--ember); }
   .source-bar input[type=file]{ display:none; }
@@ -135,31 +144,43 @@
   .count{
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--ink-dim);
-    margin: 0 0 22px;
+    margin: 0 0 20px;
   }
   .count strong{ color: var(--ember); font-weight: 500; }
 
-  .verse{
-    padding: 22px 0;
+  .book-group{
+    margin-bottom: 8px;
+  }
+  .book-group .book-heading{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ember);
+    padding-top: 20px;
+    margin-bottom: 4px;
     border-top: 1px solid var(--rule);
   }
-  .verse:last-child{ border-bottom: 1px solid var(--rule); }
+  .book-group:first-child .book-heading{
+    border-top: none;
+  }
+
+  .verse{
+    padding: 16px 0 16px 0;
+  }
+  .verse + .verse{
+    border-top: 1px solid var(--rule);
+  }
 
   .verse .ref{
     display:flex;
     align-items:baseline;
     gap: 10px;
     margin-bottom: 8px;
-  }
-  .verse .book{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ember);
+    flex-wrap: wrap;
   }
   .verse .cv{
     font-family: 'IBM Plex Mono', monospace;
@@ -167,16 +188,18 @@
     color: var(--ink-dim);
   }
   .verse .text{
-    font-size: 21px;
+    font-size: clamp(17px, 4.5vw, 21px);
     line-height: 1.55;
     color: var(--ink);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   .empty, .error{
     font-family: 'IBM Plex Mono', monospace;
     font-size: 13px;
     color: var(--ink-dim);
-    padding: 40px 0;
+    padding: 32px 0;
     border-top: 1px solid var(--rule);
     line-height: 1.7;
   }
@@ -185,8 +208,7 @@
   ::selection{ background: var(--ember-dim); color: #fff; }
 
   @media (max-width: 480px){
-    h1{ font-size: 34px; }
-    .entry input{ font-size: 26px; }
+    .source-bar{ font-size: 10px; }
   }
 </style>
 </head>
@@ -215,6 +237,7 @@
 
 <script>
 let verses = []; // {book, chapter, verse, text}
+let bookOrderIndex = new Map(); // book name -> first-seen index (canonical order)
 let loaded = false;
 
 const sourceDot = document.getElementById('sourceDot');
@@ -235,17 +258,25 @@ function setSource(state, msg){
 function parseBible(text){
   const lines = text.split(/\r?\n/);
   const out = [];
-  const re = /^\s*((?:[1-3]\s?)?[A-Za-z][A-Za-z .]*?)\s+(\d+):(\d+)\s+(.+?)\s*$/;
+  // greedy capture for the verse text so the FULL remainder of the line
+  // (including any internal punctuation/colons) is kept, then trimmed.
+  const re = /^\s*((?:[1-3]\s?)?[A-Za-z][A-Za-z .]*?)\s+(\d+):(\d+)\s+(.+)$/;
+  bookOrderIndex = new Map();
   for (const line of lines){
     if (!line.trim()) continue;
     const m = line.match(re);
     if (m){
-      out.push({
-        book: m[1].trim(),
+      const book = m[1].trim();
+      const entry = {
+        book,
         chapter: parseInt(m[2], 10),
         verse: parseInt(m[3], 10),
         text: m[4].trim()
-      });
+      };
+      out.push(entry);
+      if (!bookOrderIndex.has(book)){
+        bookOrderIndex.set(book, bookOrderIndex.size);
+      }
     }
   }
   return out;
@@ -281,6 +312,7 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
 });
 
 // every way to split a digit string into (chapter, verse), no leading-zero halves
+// ordered so smaller chapter numbers come first (e.g. 1:23 before 12:3)
 function splitNumber(digits){
   const pairs = [];
   const seen = new Set();
@@ -315,36 +347,63 @@ function render(digits){
     return;
   }
 
+  // collect matches, remembering which split-pair (order) each came from
   const matches = [];
-  for (const p of pairs){
+  pairs.forEach((p, pairIndex) => {
     for (const v of verses){
       if (v.chapter === p.chapter && v.verse === p.verse){
-        matches.push(v);
+        matches.push({...v, pairIndex});
       }
     }
-  }
+  });
 
   if (matches.length === 0){
     results.innerHTML = `<div class="empty">No book in the loaded text has a verse at ${pairs.map(p=>p.chapter+':'+p.verse).join(' or ')}.</div>`;
     return;
   }
 
+  // group by book, book order = canonical order (first appearance in source text)
+  const groups = new Map(); // book -> array of matches
+  for (const m of matches){
+    if (!groups.has(m.book)) groups.set(m.book, []);
+    groups.get(m.book).push(m);
+  }
+
+  const bookNames = [...groups.keys()].sort((a, b) => {
+    const ai = bookOrderIndex.has(a) ? bookOrderIndex.get(a) : Infinity;
+    const bi = bookOrderIndex.has(b) ? bookOrderIndex.get(b) : Infinity;
+    return ai - bi;
+  });
+
   const countEl = document.createElement('p');
   countEl.className = 'count';
-  countEl.innerHTML = `<strong>${matches.length}</strong> verse${matches.length === 1 ? '' : 's'} found`;
+  countEl.innerHTML = `<strong>${matches.length}</strong> verse${matches.length === 1 ? '' : 's'} found across <strong>${bookNames.length}</strong> book${bookNames.length === 1 ? '' : 's'}`;
   results.appendChild(countEl);
 
-  for (const v of matches){
-    const el = document.createElement('div');
-    el.className = 'verse';
-    el.innerHTML = `
-      <div class="ref">
-        <span class="book">${v.book}</span>
-        <span class="cv">${v.chapter}:${v.verse}</span>
-      </div>
-      <div class="text">${v.text}</div>
-    `;
-    results.appendChild(el);
+  for (const book of bookNames){
+    const groupVerses = groups.get(book).sort((a, b) => a.pairIndex - b.pairIndex);
+
+    const groupEl = document.createElement('div');
+    groupEl.className = 'book-group';
+
+    const heading = document.createElement('div');
+    heading.className = 'book-heading';
+    heading.textContent = book;
+    groupEl.appendChild(heading);
+
+    for (const v of groupVerses){
+      const el = document.createElement('div');
+      el.className = 'verse';
+      el.innerHTML = `
+        <div class="ref">
+          <span class="cv">${v.chapter}:${v.verse}</span>
+        </div>
+        <div class="text">${v.text}</div>
+      `;
+      groupEl.appendChild(el);
+    }
+
+    results.appendChild(groupEl);
   }
 }
 
