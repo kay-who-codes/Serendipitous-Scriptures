@@ -204,7 +204,7 @@
 
   <div class="source-bar">
     <span class="dot" id="sourceDot"></span>
-    <span id="sourceLabel">checking for /Files/bible.txt…</span>
+    <span id="sourceLabel">checking for Files/bible.txt…</span>
     <label>load a file
       <input type="file" id="fileInput" accept=".txt" />
     </label>
@@ -253,7 +253,7 @@ function parseBible(text){
 
 async function tryLoadDefault(){
   try{
-    const res = await fetch('/Files/bible.txt');
+    const res = await fetch('Files/bible.txt');
     if (!res.ok) throw new Error('not found');
     const text = await res.text();
     verses = parseBible(text);
