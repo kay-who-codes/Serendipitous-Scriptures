@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Numbered — a verse-number concordance</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #0b0d10;
+    --bg-raised: #14171c;
+    --ink: #ece7dc;
+    --ink-dim: #8b8f96;
+    --rule: #262b32;
+    --ember: #c98a4b;
+    --ember-dim: #6b5638;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap{
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px 24px 120px;
+  }
+
+  .eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin: 0 0 10px;
+  }
+
+  h1{
+    font-weight: 500;
+    font-size: 44px;
+    line-height: 1.05;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+  h1 em{
+    font-style: italic;
+    color: var(--ember);
+  }
+
+  .sub{
+    color: var(--ink-dim);
+    font-size: 19px;
+    line-height: 1.5;
+    margin: 0 0 40px;
+    max-width: 52ch;
+  }
+
+  /* the input — a single ledger line */
+  .entry{
+    display:flex;
+    align-items: baseline;
+    gap: 18px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 14px;
+    margin-bottom: 8px;
+  }
+  .entry input{
+    flex:1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 34px;
+    letter-spacing: 0.05em;
+    padding: 6px 0;
+  }
+  .entry input::placeholder{ color: #3a3f47; }
+  .entry .go{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    background: none;
+    border: 1px solid var(--rule);
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+    white-space: nowrap;
+  }
+  .entry .go:hover{ border-color: var(--ember); color: var(--ember); }
+
+  .splits{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-dim);
+    margin: 14px 0 46px;
+    min-height: 18px;
+    letter-spacing: 0.02em;
+  }
+  .splits span{ color: var(--ember-dim); }
+
+  /* status / source */
+  .source-bar{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-dim);
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; background:#5a5f66; flex-shrink:0; }
+  .dot.ok{ background:#7fae6a; }
+  .dot.bad{ background:#b3563f; }
+  .source-bar label{
+    border: 1px solid var(--rule);
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+  }
+  .source-bar label:hover{ border-color: var(--ember); color: var(--ember); }
+  .source-bar input[type=file]{ display:none; }
+
+  /* results */
+  .count{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin: 0 0 22px;
+  }
+  .count strong{ color: var(--ember); font-weight: 500; }
+
+  .verse{
+    padding: 22px 0;
+    border-top: 1px solid var(--rule);
+  }
+  .verse:last-child{ border-bottom: 1px solid var(--rule); }
+
+  .verse .ref{
+    display:flex;
+    align-items:baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .verse .book{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ember);
+  }
+  .verse .cv{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-dim);
+  }
+  .verse .text{
+    font-size: 21px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+
+  .empty, .error{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-dim);
+    padding: 40px 0;
+    border-top: 1px solid var(--rule);
+    line-height: 1.7;
+  }
+  .error{ color: #c98a6f; }
+
+  ::selection{ background: var(--ember-dim); color: #fff; }
+
+  @media (max-width: 480px){
+    h1{ font-size: 34px; }
+    .entry input{ font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Verse · Chapter · Number</p>
+  <h1>Enter a number.<br>Read it back as <em>scripture</em>.</h1>
+  <p class="sub">Type any string of digits. Every way it can be split into a chapter and a verse — <span style="color:var(--ink)">1:23</span>, <span style="color:var(--ink)">12:3</span> — gets checked against every book of the Bible.</p>
+
+  <div class="entry">
+    <input id="numInput" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="123" autocomplete="off" />
+    <button class="go" id="goBtn">Find verses</button>
+  </div>
+  <div class="splits" id="splits"></div>
+
+  <div class="source-bar">
+    <span class="dot" id="sourceDot"></span>
+    <span id="sourceLabel">checking for /Files/bible.txt…</span>
+    <label>load a file
+      <input type="file" id="fileInput" accept=".txt" />
+    </label>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<script>
+let verses = []; // {book, chapter, verse, text}
+let loaded = false;
+
+const sourceDot = document.getElementById('sourceDot');
+const sourceLabel = document.getElementById('sourceLabel');
+const results = document.getElementById('results');
+const splitsEl = document.getElementById('splits');
+const input = document.getElementById('numInput');
+
+function setSource(state, msg){
+  sourceDot.className = 'dot ' + state;
+  sourceLabel.textContent = msg;
+}
+
+// Parses common plain-text Bible formats, e.g.:
+//   "Genesis 1:1 In the beginning God created..."
+//   "Gen 1:1	In the beginning..."
+//   "1 John 2:3 And hereby..."
+function parseBible(text){
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  const re = /^\s*((?:[1-3]\s?)?[A-Za-z][A-Za-z .]*?)\s+(\d+):(\d+)\s+(.+?)\s*$/;
+  for (const line of lines){
+    if (!line.trim()) continue;
+    const m = line.match(re);
+    if (m){
+      out.push({
+        book: m[1].trim(),
+        chapter: parseInt(m[2], 10),
+        verse: parseInt(m[3], 10),
+        text: m[4].trim()
+      });
+    }
+  }
+  return out;
+}
+
+async function tryLoadDefault(){
+  try{
+    const res = await fetch('/Files/bible.txt');
+    if (!res.ok) throw new Error('not found');
+    const text = await res.text();
+    verses = parseBible(text);
+    if (verses.length === 0) throw new Error('no verses parsed');
+    loaded = true;
+    setSource('ok', `loaded /Files/bible.txt · ${verses.length.toLocaleString()} verses`);
+  }catch(e){
+    setSource('bad', 'no bible.txt found at /Files/ — load a .txt file below');
+  }
+}
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  setSource('', `reading ${file.name}…`);
+  const text = await file.text();
+  verses = parseBible(text);
+  if (verses.length === 0){
+    setSource('bad', `couldn't find any "Book chapter:verse text" lines in ${file.name}`);
+    loaded = false;
+    return;
+  }
+  loaded = true;
+  setSource('ok', `loaded ${file.name} · ${verses.length.toLocaleString()} verses`);
+});
+
+// every way to split a digit string into (chapter, verse), no leading-zero halves
+function splitNumber(digits){
+  const pairs = [];
+  const seen = new Set();
+  for (let i = 1; i < digits.length; i++){
+    const a = digits.slice(0, i);
+    const b = digits.slice(i);
+    if (a.length > 1 && a[0] === '0') continue;
+    if (b.length > 1 && b[0] === '0') continue;
+    const chapter = parseInt(a, 10);
+    const verse = parseInt(b, 10);
+    const key = chapter + ':' + verse;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    pairs.push({chapter, verse});
+  }
+  return pairs;
+}
+
+function render(digits){
+  results.innerHTML = '';
+  splitsEl.innerHTML = '';
+
+  if (!digits){
+    return;
+  }
+
+  const pairs = splitNumber(digits);
+  splitsEl.innerHTML = 'reading as ' + pairs.map(p => `<span>${p.chapter}:${p.verse}</span>`).join(', ');
+
+  if (!loaded){
+    results.innerHTML = `<div class="error">No Bible text loaded yet. Point this app at /Files/bible.txt, or load a .txt file above.</div>`;
+    return;
+  }
+
+  const matches = [];
+  for (const p of pairs){
+    for (const v of verses){
+      if (v.chapter === p.chapter && v.verse === p.verse){
+        matches.push(v);
+      }
+    }
+  }
+
+  if (matches.length === 0){
+    results.innerHTML = `<div class="empty">No book in the loaded text has a verse at ${pairs.map(p=>p.chapter+':'+p.verse).join(' or ')}.</div>`;
+    return;
+  }
+
+  const countEl = document.createElement('p');
+  countEl.className = 'count';
+  countEl.innerHTML = `<strong>${matches.length}</strong> verse${matches.length === 1 ? '' : 's'} found`;
+  results.appendChild(countEl);
+
+  for (const v of matches){
+    const el = document.createElement('div');
+    el.className = 'verse';
+    el.innerHTML = `
+      <div class="ref">
+        <span class="book">${v.book}</span>
+        <span class="cv">${v.chapter}:${v.verse}</span>
+      </div>
+      <div class="text">${v.text}</div>
+    `;
+    results.appendChild(el);
+  }
+}
+
+function run(){
+  const digits = input.value.replace(/[^0-9]/g, '');
+  render(digits);
+}
+
+document.getElementById('goBtn').addEventListener('click', run);
+input.addEventListener('keydown', (e) => { if (e.key === 'Enter') run(); });
+input.addEventListener('input', () => {
+  const digits = input.value.replace(/[^0-9]/g, '');
+  if (input.value !== digits) input.value = digits;
+});
+
+tryLoadDefault();
+</script>
+</body>
+</html>
