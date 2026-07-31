@@ -103,6 +103,33 @@
   }
   .entry .go:hover, .entry .go:active{ border-color: var(--ember); color: var(--ember); }
 
+  /* ordering filter chips */
+  .order-filter{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0 6px;
+  }
+  .order-filter .chip{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    background: none;
+    border: 1px solid var(--rule);
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .order-filter .chip:hover{ border-color: var(--ember-dim); color: var(--ink); }
+  .order-filter .chip.active{
+    border-color: var(--ember);
+    color: var(--ember);
+    background: rgba(201,138,75,0.08);
+  }
+
   .splits{
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
@@ -114,6 +141,7 @@
     word-break: break-word;
   }
   .splits span{ color: var(--ember-dim); }
+  .splits span.excluded{ color: #4a4e55; text-decoration: line-through; }
 
   /* status / source */
   .source-bar{
@@ -170,7 +198,14 @@
 
   .verse{
     padding: 16px 0 16px 0;
+    cursor: pointer;
+    transition: background .15s;
+    margin: 0 -8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 3px;
   }
+  .verse:hover{ background: var(--bg-raised); }
   .verse + .verse{
     border-top: 1px solid var(--rule);
   }
@@ -187,6 +222,16 @@
     font-size: 12px;
     color: var(--ink-dim);
   }
+  .verse .hint{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ember-dim);
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  .verse:hover .hint{ opacity: 1; }
   .verse .text{
     font-size: clamp(17px, 4.5vw, 21px);
     line-height: 1.55;
@@ -205,6 +250,70 @@
   }
   .error{ color: #c98a6f; }
 
+  /* chapter reading view */
+  .chapter-view{ display:none; }
+  .chapter-view.active{ display:block; }
+  .search-view.hidden{ display:none; }
+
+  .back-bar{
+    display:flex;
+    align-items:center;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .back-btn{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    background: none;
+    border: 1px solid var(--rule);
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .back-btn:hover{ border-color: var(--ember); color: var(--ember); }
+
+  .chapter-title{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  .chapter-heading{
+    font-weight: 500;
+    font-size: clamp(24px, 6vw, 32px);
+    margin: 0 0 28px;
+  }
+  .chapter-heading em{ font-style: italic; color: var(--ember); }
+
+  .cverse{
+    padding: 12px 0;
+  }
+  .cverse + .cverse{ border-top: 1px solid var(--rule); }
+  .cverse.highlight{
+    background: rgba(201,138,75,0.08);
+    margin: 0 -14px;
+    padding: 12px 14px;
+    border-radius: 3px;
+    border-top: none;
+  }
+  .cverse .n{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ember-dim);
+    margin-right: 10px;
+  }
+  .cverse.highlight .n{ color: var(--ember); }
+  .cverse .t{
+    font-size: clamp(17px, 4.5vw, 21px);
+    line-height: 1.55;
+  }
+
   ::selection{ background: var(--ember-dim); color: #fff; }
 
   @media (max-width: 480px){
@@ -214,37 +323,63 @@
 </head>
 <body>
 <div class="wrap">
-  <p class="eyebrow">Verse · Chapter · Number</p>
-  <h1>Enter a number.<br>Read it back as <em>scripture</em>.</h1>
-  <p class="sub">Type any string of digits. Every way it can be split into a chapter and a verse — <span style="color:var(--ink)">1:23</span>, <span style="color:var(--ink)">12:3</span> — gets checked against every book of the Bible.</p>
 
-  <div class="entry">
-    <input id="numInput" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="123" autocomplete="off" />
-    <button class="go" id="goBtn">Find verses</button>
+  <div class="search-view" id="searchView">
+    <p class="eyebrow">Verse · Chapter · Number</p>
+    <h1>Enter a number.<br>Read it back as <em>scripture</em>.</h1>
+    <p class="sub">Type any string of digits. Every way it can be split into a chapter and a verse — <span style="color:var(--ink)">1:23</span>, <span style="color:var(--ink)">12:3</span> — gets checked against every book of the Bible.</p>
+
+    <div class="entry">
+      <input id="numInput" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="123" autocomplete="off" />
+      <button class="go" id="goBtn">Find verses</button>
+    </div>
+
+    <div class="order-filter" id="orderFilter"></div>
+
+    <div class="splits" id="splits"></div>
+
+    <div class="source-bar">
+      <span class="dot" id="sourceDot"></span>
+      <span id="sourceLabel">checking for Files/bible.txt…</span>
+      <label>load a file
+        <input type="file" id="fileInput" accept=".txt" />
+      </label>
+    </div>
+
+    <div id="results"></div>
   </div>
-  <div class="splits" id="splits"></div>
 
-  <div class="source-bar">
-    <span class="dot" id="sourceDot"></span>
-    <span id="sourceLabel">checking for Files/bible.txt…</span>
-    <label>load a file
-      <input type="file" id="fileInput" accept=".txt" />
-    </label>
+  <div class="chapter-view" id="chapterView">
+    <div class="back-bar">
+      <button class="back-btn" id="backBtn">&larr; back to search</button>
+      <span class="chapter-title" id="chapterTitle"></span>
+    </div>
+    <h2 class="chapter-heading" id="chapterHeading"></h2>
+    <div id="chapterVerses"></div>
   </div>
 
-  <div id="results"></div>
 </div>
 
 <script>
 let verses = []; // {book, chapter, verse, text}
 let bookOrderIndex = new Map(); // book name -> first-seen index (canonical order)
 let loaded = false;
+let currentDigits = '';
+let orderMode = 'all'; // 'all' | pairIndex-key like "0" meaning only that split order
 
 const sourceDot = document.getElementById('sourceDot');
 const sourceLabel = document.getElementById('sourceLabel');
 const results = document.getElementById('results');
 const splitsEl = document.getElementById('splits');
 const input = document.getElementById('numInput');
+const orderFilterEl = document.getElementById('orderFilter');
+
+const searchView = document.getElementById('searchView');
+const chapterView = document.getElementById('chapterView');
+const backBtn = document.getElementById('backBtn');
+const chapterTitle = document.getElementById('chapterTitle');
+const chapterHeading = document.getElementById('chapterHeading');
+const chapterVerses = document.getElementById('chapterVerses');
 
 function setSource(state, msg){
   sourceDot.className = 'dot ' + state;
@@ -335,16 +470,51 @@ function splitNumber(digits){
   return pairs;
 }
 
+function buildOrderFilter(pairs){
+  orderFilterEl.innerHTML = '';
+  if (pairs.length <= 1){
+    return; // nothing to filter when there's only one possible split
+  }
+
+  const allChip = document.createElement('button');
+  allChip.className = 'chip' + (orderMode === 'all' ? ' active' : '');
+  allChip.textContent = 'all splits';
+  allChip.addEventListener('click', () => { orderMode = 'all'; run(); });
+  orderFilterEl.appendChild(allChip);
+
+  pairs.forEach((p, i) => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (orderMode === String(i) ? ' active' : '');
+    chip.textContent = `${p.chapter}:${p.verse}`;
+    chip.addEventListener('click', () => { orderMode = String(i); run(); });
+    orderFilterEl.appendChild(chip);
+  });
+}
+
 function render(digits){
   results.innerHTML = '';
   splitsEl.innerHTML = '';
 
   if (!digits){
+    orderFilterEl.innerHTML = '';
     return;
   }
 
-  const pairs = splitNumber(digits);
-  splitsEl.innerHTML = 'reading as ' + pairs.map(p => `<span>${p.chapter}:${p.verse}</span>`).join(', ');
+  const allPairs = splitNumber(digits);
+  buildOrderFilter(allPairs);
+
+  // reset to 'all' if the selected mode index no longer exists for this number
+  if (orderMode !== 'all' && !allPairs[parseInt(orderMode, 10)]){
+    orderMode = 'all';
+    buildOrderFilter(allPairs);
+  }
+
+  const pairs = orderMode === 'all' ? allPairs : [allPairs[parseInt(orderMode, 10)]];
+
+  splitsEl.innerHTML = allPairs.map((p, i) => {
+    const included = orderMode === 'all' || orderMode === String(i);
+    return `<span class="${included ? '' : 'excluded'}">${p.chapter}:${p.verse}</span>`;
+  }).join(', ');
 
   if (!loaded){
     results.innerHTML = `<div class="error">No Bible text loaded yet. Point this app at /Files/bible.txt, or load a .txt file above.</div>`;
@@ -401,9 +571,11 @@ function render(digits){
       el.innerHTML = `
         <div class="ref">
           <span class="cv">${v.chapter}:${v.verse}</span>
+          <span class="hint">read full chapter &rarr;</span>
         </div>
         <div class="text">${v.text}</div>
       `;
+      el.addEventListener('click', () => openChapter(v.book, v.chapter, v.verse));
       groupEl.appendChild(el);
     }
 
@@ -411,8 +583,45 @@ function render(digits){
   }
 }
 
+function openChapter(book, chapter, highlightVerse){
+  const chapterVersesList = verses
+    .filter(v => v.book === book && v.chapter === chapter)
+    .sort((a, b) => a.verse - b.verse);
+
+  if (chapterVersesList.length === 0) return;
+
+  chapterTitle.textContent = `${book} ${chapter}`;
+  chapterHeading.innerHTML = `${book} <em>${chapter}</em>`;
+  chapterVerses.innerHTML = '';
+
+  for (const v of chapterVersesList){
+    const el = document.createElement('div');
+    el.className = 'cverse' + (v.verse === highlightVerse ? ' highlight' : '');
+    el.innerHTML = `<span class="n">${v.verse}</span><span class="t">${v.text}</span>`;
+    chapterVerses.appendChild(el);
+  }
+
+  searchView.classList.add('hidden');
+  chapterView.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'auto' });
+
+  // scroll the highlighted verse into view after layout settles
+  requestAnimationFrame(() => {
+    const hl = chapterVerses.querySelector('.highlight');
+    if (hl) hl.scrollIntoView({ block: 'center', behavior: 'auto' });
+  });
+}
+
+function closeChapter(){
+  chapterView.classList.remove('active');
+  searchView.classList.remove('hidden');
+}
+
+backBtn.addEventListener('click', closeChapter);
+
 function run(){
   const digits = input.value.replace(/[^0-9]/g, '');
+  currentDigits = digits;
   render(digits);
 }
 
